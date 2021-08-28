@@ -173,7 +173,39 @@ static void split_data(ini_t *ini) {
 
 
 
-ini_t* ini_load(const char *filename) {
+ini_t* ini_load_mem(void *addr, unsigned int size) {
+  ini_t *ini = NULL;
+
+  if (!addr || !size) {
+    goto fail;
+  }
+
+  /* Init ini struct */
+  ini = malloc(sizeof(*ini));
+  if (!ini) {
+    goto fail;
+  }
+  memset(ini, 0, sizeof(*ini));
+
+  /* Load file content into memory, null terminate, init end var */
+  ini->data = malloc(size + 1);
+  ini->data[size] = '\0';
+  ini->end = ini->data  + size;
+  memmove(ini->data, addr, size);
+
+  /* Prepare data */
+  split_data(ini);
+
+  /* Clean up and return */
+  return ini;
+
+fail:
+  if (ini) ini_free(ini);
+  return NULL;
+}
+
+
+ini_t* ini_load_file(const char *filename) {
   ini_t *ini = NULL;
   FILE *fp = NULL;
   int n, sz;
